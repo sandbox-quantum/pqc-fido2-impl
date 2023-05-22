@@ -1,6 +1,6 @@
 [submodule "java-webauthn-server"]
 	path = java-webauthn-server
-	url = https://github.com/Yubico/java-webauthn-server.git
+	url = git@github.com:sandbox-quantum/java-webauthn-server.git
 [submodule "liboqs-java"]
 	path = liboqs-java
-	url = https://github.com/open-quantum-safe/liboqs-java.git
+	url = git@github.com:sandbox-quantum/liboqs-java.git

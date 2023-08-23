@@ -4,44 +4,33 @@
 
 ### Implementation Infrastructure
  - Authenticator
-   - Solokey 
-   - Solo: STM32L432 (C)
-   - Solo2: NXP LPC55S69 (LPCXpresso55S69 development board) (Rust)
-   - OpenSK
+   - solo2 
+        - fido-authenticator
+        - trussed
+        - cosey
+        - ctap-types
+        - pqclean
  - Server
-   - Yubico: JavaWebAuthn Server 
- - PQC library
-   - Liboqs (Has Go, Rust and Java wrappers)
-   - Pqm4 - C (ARM Cortex-M4 family of microcontrollers)
- - Firefox browser: In case we will need to make some tweaks to the FIDO2 client,  it will be easier to do with firefox as it is open source. '
+   - java-webAuthn-server 
+   - liboqs-java
+ - Firefox browser
+     - authenticator-rs: FIDO2 rust crate used in firefox. 
+
+### Implementation changes
+`fido-authenticator` library is used by solo2 and nitrokey3 to perform fido2 operation. It is built using on top of trussed app, which provides secure functionality for key generation, signing, storage etc. In our case, we needed to add PQC algorithms Dilithium3 and Kyber768 in FIDO2 library. The best place for this would be trussed app as it isolates all crypto operations. However, trussed app also makes a copy of inputs and outputs which increases the stack space usage. Dilithium3 requires a lot of stack size during signing. So, we implementation key generation and signing directly on `fido-authenticator` repo. However, we also needed to modify `trussed` app to support reading, writing, encrypting, decrypting large data as PQ based keys and signatures are larger in size. We modified `cosey` and `ctap-types` repo to support COSE encoding (serialization/deserialization) for Dilithium3 and Kyber768.
+- `fido-authenticator`: worked on `pqc-develop`branch. Changes can be found at https://github.com/sandbox-quantum/fido-authenticator/compare/main...pqc_develop.
+- `trussed`: worked on `pqc-develop2`branch. Changes can be found at https://github.com/sandbox-quantum/trussed/compare/main...pqc_develop2.
+- cosey and ctap-types: [Todo: Upload these submodules to SandboxAQ as a private repo.]
+
+java-webAuthn-server is a server end library for FIDO2. We added support for additional signing algorithm Dilithium3.
+- `java-webauthn-server`: worked on `main` branch. Most changes can be found in commit https://github.com/sandbox-quantum/java-webauthn-server/commit/970c97fb2f85134b6b7a0b6280813e99d8a950eb.
+
+On firefox, we modify their `authenticator-rs` crate to support Dilithium3 and Kyber768. 
+- `authenticator-rs`: worked on `ctap2-pqc-develop` branch. Changes can be found at https://github.com/sandbox-quantum/authenticator-rs/compare/ctap2-2021...ctap2-pqc-develop
 
 
-### PQC changes 
- - **Question**: The new hybrid algorithm we will implement, will not have a COSE identifier. Therefore, it would be hard to allow authenticator and RP to decide from a set of hybrid PQC. 
-   - We can use a custom COSEidentifiers that is not in use for benchmarking purposes. 
-   - We hardcode the PQC we use on both authentication and RP side. This will prevent the need of exchanging PQC cipher details.
-
-1. *authenticatorMakeCredential* and *authenticatorGetAssertion* 
-For both attestation and assertion signature, we need to add PQC signing on authenticator and verification on server end. 
-   - authenticatorMakeCredential API returns an attStmt which contains (1) sig: signcredPrivateKey(authData||clientDataHash) if self attestation used. 
-   - authenticatorGetAssertion API returns signcredPrivateKey(authData||clientDataHash)
-   - Both of the above signatures needs to be verified on the server end. 
-
-2. *authenticatorGetInfo*
-   - Authenticator returns algorithms, which is a list of supported algorithms for credential generation (Array of PublicKeyCredentialParameters). PublicKeyCredentialParameters. It is a list of COSEAlgorithmIdentifier. If we use a custom COSEidentifier, we update them. Otherwise, it only returns classical algorithms.
-   - remainingDiscoverableCredentials: Authenticator estimates this based on the assumption that all future discoverable credentials will have maximally-sized fields. Therefore, we do not need to worry about this but need to confirm this while implementing.
-
-3. authenticatorClientPIN
-  This authenticatorClientPIN command allows a platform to use a PIN/UV auth protocol to perform a number of actions: Setting a PIN, Changing a PIN, Obtaining the pinUvAuthToken. Platforms obtain a shared secret for each transaction. The authenticator does not have to keep a list of sharedSecrets for all active sessions. If there are subsequent authenticatorClientPIN transactions, a new sharedSecret is generated every time. 
-   The authenticator interface needs to be updated:
-   - regenerate(): Generates a fresh private public keys.
-   - getPublicKey() → coseKey: Returns the authenticator’s public key as a COSE_Key structure.
-   - decapsulate(peerCoseKey) → sharedSecret | error: Processes the output of encapsulate from the peer and produces a shared secret, known to both platform and authenticator.
-   - decrypt(sharedSecret, ciphertext) → plaintext | error: Decrypts a ciphertext, using sharedSecret as a key, and returns the plaintext.
-   - verify(key, message, signature) → success | error: Verifies that the signature is a valid MAC for the given message. If the key parameter value is the current pinUvAuthToken, it also checks whether the pinUvAuthToken is in use or not.
-   
-    The platform interfaces needs to be updated is:
-   - encapsulate(peerCoseKey) → (coseKey, sharedSecret) | error : Generates an encapsulation for the authenticator’s public key and returns the message to transmit and the shared secret.
-   - encrypt(key, demPlaintext) → ciphertext: Encrypts a plaintext to produce a ciphertext, which may be longer than the plaintext. The plaintext is restricted to being a multiple of the AES block size (16 bytes) in length.
-   - decrypt(key, ciphertext) → plaintext | error: Decrypts a ciphertext and returns the plaintext.
-   - authenticate(key, message) → signature: Computes a MAC of the given message.
+### Other details 
+1. Dilithium3 and Kyber768 have no defined COSE ids. So, in our implementation we use `-20` and `-24` for Dilithium3 and Kyber 678 resp. For COSE key type, we use `LWE = 5` and `PQCKEM = 6` for Dilithium3 and Kyber678 resp.
+2. We use self-attestation for our PQ FIDO2 prototype. If a server would require DIRECT attestation, our implementation will break.
+3. For CTAP we added KEM support for *authenticatorClientPIN* API. This command exists so that plaintext PINs are not sent to the authenticator. We added *pinUvAuthProtocol = 3* for Kyber768. The `fido-authenticator` is updated to support kyber and set *pinUvAuthProtocol=3*. We updated `authenticator-rs` to initiate KEM using kyber if it sees *pinUvAuthProtocol=3* in *authenticatorGetInfo*.
+4. Dilithium3 takes a lot of stack size (~90-100 KB) during signing. We optimed the stack usage by scoping variables for as short as we can and increased the stack length in *runners/lpc55/build.rs* file of solo2. 

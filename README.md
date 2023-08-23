@@ -1,26 +1,39 @@
-# pqc-fido2-impl
+# PQC FIDO2
+In this project, we add support for post-quantum algorithms on FIDO2. We implemented Dilithium3 for Signing in WebAuthn and Kyber768 for KEM in CTAP2. The current implementation only supports discoverable (resident) credentials.
 
-In this project, we plan to implement PQC on FIDO2. Currently, we only consider discoverable credentials as they are more popular because users are not required to enter usernames while using passwordless authentication. We start our implementation with the assertion process. For that, we need to implement the following six steps:
-1. implement PQC key generation and storing when a user registers the FIDO2 authenticator.
-2. transmit the public PQC to the server. 
-3. server parse it and stores it for verification.
-4. during authentication, the authenticator signs the challenge with PQC's private key.
-5. transmit the PQC signature to the server.
-6. server verifies the PQC signature.
+FIDO2 involves three main entities, (1) authenticator, (2) browser and (3) server. We needed to change all these three entities. In our prototype, we use solo2 firmware for authenticator, firefox browser and java-webauthn-server from Yubico. 
 
-The next step is to implement PQC in the attestation process, which involves following additional steps, assuming we finished the assertion:
-1. During registration, sign the registration response with PQC private key for self-attestation
-2. transmit the PQC signature to the server
-3. server verifies the signature.
+## Setup
+1. Clone repo 
+```
+git clone git@github.com:sandbox-quantum/pqc-fido2-impl.git --recurse-submodules 
+``` 
+2. Server setup
+ ```
+cd java-webauthn-server && ./gradlew run
+```
+3. Firefox setup
+```
+curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
+python3 bootstrap.py
+cd mozilla-unified
+```
+In "Cargo.toml" file add `authenticator = { path = "pqc-fido2-impl/authenticator-rs", version = "0.4.0-alpha.18", features = ["gecko"] }
+` under `[patch.crates-io]`. 
+Then, follow instructions from https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/local_glean.html. Replace 'glean' with 'authenticator-rs'.
+```
+./mach build
+./mach run
+``` 
+We tested with 118.0a1 Firefox nightly. The new versions of firefox should also work as long as modified `authenticator-rs` is used. 
 
-The last step in this project to implement PQC KEM in the authenticatorClientPIN API.
-
-FIDO2 terms for reference:
-
-  - **Discoverable credentials and Resident key**: Historically discoverable credentials have been called "resident keys", and this terminology can still be found in aspects of the protocol. (For example the name of the rk option key comes from the term “resident key”.) However, the word “resident” conflated the concepts of being discoverable and being statefully maintained by the authenticator, when it’s only the former that is externally observable and thus important. Reference: https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html
-
-  - **Attestation**: An attestation signature is produced when a new public key credential is created via an authenticatorMakeCredential operation. An attestation signature provides cryptographic proof of certain properties of the authenticator and the credential. For instance, an attestation signature asserts the authenticator type (as denoted by its AAGUID) and the credential public key. The attestation signature is signed by an attestation private key, which is chosen depending on the type of attestation desired. 
-For benchmarking PQC we can use a self attestation signature, which uses credential private key. 
+4. Authenticator setup
+Hardware required: LPCXpresso55S69 development board and 2 USB cables
+Connect USBs to "Link" and "Debug" port on the board.   
+Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
+Terminal 2: `cd solo2 && make run-dev`
 
 
-  - **Assertion**: An assertion signature is produced when the authenticatorGetAssertion method is invoked. It represents an assertion by the authenticator that the user has consented to a specific transaction, such as logging in, or completing a purchase. Thus, an assertion signature asserts that the authenticator possessing a particular credential private key has established, to the best of its ability, that the user requesting this transaction is the same user who consented to creating that particular public key credential. It also asserts additional information, termed client data, that may be useful to the caller, such as the means by which user consent was provided, and the prompt shown to the user by the authenticator.
+## Test
+1. Visit "https://localhost:8443" in the firefox browser and click on "Create account with passkey" button. This will initiate registration process using resident key. 
+2. For authentication click "Authenticate with passkey" to authenticate with the resident key.

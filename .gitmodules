@@ -4,9 +4,6 @@
 [submodule "liboqs-java"]
 	path = liboqs-java
 	url = git@github.com:sandbox-quantum/liboqs-java.git
-[submodule "pqm4"]
-	path = pqm4
-	url = git@github.com:sandbox-quantum/pqm4.git
 [submodule "solo2"]
 	path = solo2
 	url = git@github.com:sandbox-quantum/solo2.git

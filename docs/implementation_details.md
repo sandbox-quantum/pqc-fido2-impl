@@ -33,4 +33,8 @@ On firefox, we modify their `authenticator-rs` crate to support Dilithium3 and K
 1. Dilithium3 and Kyber768 have no defined COSE ids. So, in our implementation we use `-20` and `-24` for Dilithium3 and Kyber 678 resp. For COSE key type, we use `LWE = 5` and `PQCKEM = 6` for Dilithium3 and Kyber678 resp.
 2. We use self-attestation for our PQ FIDO2 prototype. If a server would require DIRECT attestation, our implementation will break.
 3. For CTAP we added KEM support for *authenticatorClientPIN* API. This command exists so that plaintext PINs are not sent to the authenticator. We added *pinUvAuthProtocol = 3* for Kyber768. The `fido-authenticator` is updated to support kyber and set *pinUvAuthProtocol=3*. We updated `authenticator-rs` to initiate KEM using kyber if it sees *pinUvAuthProtocol=3* in *authenticatorGetInfo*.
-4. Dilithium3 takes a lot of stack size (~90-100 KB) during signing. We optimed the stack usage by scoping variables for as short as we can and increased the stack length in *runners/lpc55/build.rs* file of solo2. 
+4. Dilithium3 takes a lot of stack size (~90-100 KB) during signing. We optimed the stack usage by scoping variables for as short as we can and increased the stack length in *runners/lpc55/build.rs* file of solo2.
+5. Generate static library for dilithium3 and kyber768 from pqclean: Use MCUXpressoIDE to load all files for dilithium3 and kyber768 and compile them in a static library. As an example,
+   1. In MCUXpresso, click "create a new C/C++ project" and select LPCXpresso55s69 board. Then select "C Static library" from Project .
+   2. Load all files from https://github.com/PQClean/PQClean/tree/master/crypto_sign/dilithium3/clean to source folder.
+   3. Create a common folder and load required files from https://github.com/PQClean/PQClean/tree/master/common. Add common folder in the path: project properties -> Settings -> Tool Setting -> Includes -> add location.

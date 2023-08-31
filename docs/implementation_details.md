@@ -20,7 +20,7 @@
 `fido-authenticator` library is used by solo2 and nitrokey3 to perform fido2 operation. It is built using on top of trussed app, which provides secure functionality for key generation, signing, storage etc. In our case, we needed to add PQC algorithms Dilithium3 and Kyber768 in FIDO2 library. The best place for this would be trussed app as it isolates all crypto operations. However, trussed app also makes a copy of inputs and outputs which increases the stack space usage. Dilithium3 requires a lot of stack size during signing. So, we implementation key generation and signing directly on `fido-authenticator` repo. However, we also needed to modify `trussed` app to support reading, writing, encrypting, decrypting large data as PQ based keys and signatures are larger in size. We modified `cosey` and `ctap-types` repo to support COSE encoding (serialization/deserialization) for Dilithium3 and Kyber768.
 - `fido-authenticator`: worked on `pqc-develop`branch. Changes can be found at https://github.com/sandbox-quantum/fido-authenticator/compare/main...pqc_develop.
 - `trussed`: worked on `pqc-develop2`branch. Changes can be found at https://github.com/sandbox-quantum/trussed/compare/main...pqc_develop2.
-- cosey and ctap-types: [Todo: Upload these submodules to SandboxAQ as a private repo.]
+- cosey and ctap-types: https://github.com/sandbox-quantum/cosey/commits/main, https://github.com/sandbox-quantum/cosey/commits/main 
 
 java-webAuthn-server is a server end library for FIDO2. We added support for additional signing algorithm Dilithium3.
 - `java-webauthn-server`: worked on `main` branch. Most changes can be found in commit https://github.com/sandbox-quantum/java-webauthn-server/commit/970c97fb2f85134b6b7a0b6280813e99d8a950eb.

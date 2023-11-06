@@ -9,4 +9,4 @@
 	url = git@github.com:sandbox-quantum/solo2.git
 [submodule "authenticator-rs"]
 	path = authenticator-rs
-	url = https://github.com/sandbox-quantum/authenticator-rs
+	url = git@github.com:sandbox-quantum/authenticator-rs.git

@@ -40,7 +40,7 @@ We tested with 118.0a1 Firefox nightly. The new versions of firefox should also 
 5. Authenticator setup:
 
 * Hardware required: LPCXpresso55S69 development board and 2 USB cables
-* Connect USBs to "Power-only" and "Debug" ports on the board.   
+* Connect USBs to "High Spd" and "Debug Link" ports on the board.   
 * Make sure the board is identified as an authenticator. In Linux, you can use `fido2-token -L`
 * Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
 * Terminal 2: `cd solo2 && make run-dev`

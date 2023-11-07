@@ -100,8 +100,9 @@ Select "Proceed" and click the **USER** button on the board.
 
 Output of the successful registration.
 
-![Alt text](images/create_account_success.png)
+![Alt text](images/create_account_success_di3.png)
 
+In our experiment, Dilithium3 ID is `-20`, you can see it in our [patched COSEY module](https://github.com/sandbox-quantum/cosey_fork/blob/pqc_kyber768_dilithium3/src/lib.rs#L76)
 
 
 2. For authentication click "Authenticate with passkey" to authenticate with the resident key.

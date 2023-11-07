@@ -3,8 +3,8 @@ In this project, we add support for post-quantum algorithms on FIDO2. We impleme
 
 FIDO2 involves three main entities:
 
-1. authenticator, 
-2. browser and 
+1. authenticator,
+2. browser and
 3. server.
 
 We needed to change all these three entities. In our prototype, we use solo2 firmware for `authenticator`, Firefox browser and `java-webauthn-server` from Yubico.
@@ -23,9 +23,9 @@ git clone git@github.com:sandbox-quantum/pqc-fido2-impl.git --recurse-submodules
 
 *Note*: You have to build `liboqs` first.
 
-Go to `liboqs-java`/`, and follow the [Building](https://github.com/sandbox-quantum/liboqs-java_fork#building-the-oqs-dependency) the OQS dependency](https://github.com/sandbox-quantum/liboqs-java_fork#building-the-oqs-dependency) instructions.
+Go to `liboqs-java/`, and follow the [Building the OQS dependency](https://github.com/sandbox-quantum/liboqs-java_fork#building-the-oqs-dependency) instructions.
 
-Next, [Building the Java OQS wrapper](https://github.com/sandbox-quantum/liboqs-java_fork#building-the-java-oqs-wrapper):
+Next, follow the [Building the Java OQS wrapper instructions](https://github.com/sandbox-quantum/liboqs-java_fork#building-the-java-oqs-wrapper):
 
 ```
 mvn package -P macosx -Dliboqs.include.dir="/usr/local/include" -Dliboqs.lib.dir="/usr/local/lib"
@@ -41,7 +41,7 @@ Go to `java-webauthn-server/`, run:
 
 ## Firefox browser with PQC authenticator
 
-You have to [install `Mercurial`](https://pypi.org/project/mercurial/) before building Firefox.
+You have to install [`Mercurial`](https://pypi.org/project/mercurial/) before building Firefox.
 
 Follow the [Bootstrap a copy of the Firefox source code](https://firefox-source-docs.mozilla.org/setup/linux_build.html#bootstrap-a-copy-of-the-firefox-source-code)
 
@@ -58,7 +58,7 @@ Patch `Cargo.toml` with our `authenticator-rs` module:
 - Under `[patch.crates-io]`, add `authenticator = { path = "../authenticator-rs", version = "0.4.0-alpha.18", features = ["gecko"] }`.
 - Update Cargo: `cargo update -p authenticator`. Ingore the `bindgen` errors.
 
-Then, run:
+Then, at `mozilla-unified/` run:
 ```
 ./mach build
 ./mach run
@@ -82,7 +82,7 @@ In two terminals:
 
 - Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
 - Terminal 2: Go to `solo2/` directory, run `make run-dev`
- 
+
 To verify that the hardware authenticator is working, we use `fido2-token` tool from `libfido2`:
 
 ```
@@ -96,7 +96,7 @@ ioreg://4296480287: vendor=0x1209, product=0xbeee (SoloKeys Solo 2 (custom))
 
 ![Alt text](images/create_account.png)
 
-Select "Proceed" and click the **USER** button on the board. 
+Select "Proceed" and click the **USER** button on the board.
 
 Output of the successful registration.
 
@@ -106,7 +106,7 @@ Output of the successful registration.
 
 2. For authentication click "Authenticate with passkey" to authenticate with the resident key.
 
-Select "Proceed" and click the **USER** button on the board. 
+Select "Proceed" and click the **USER** button on the board.
 
 ![Alt text](images/auth.png)
 

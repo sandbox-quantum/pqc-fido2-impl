@@ -115,3 +115,22 @@ Output of the successful authentication.
 
 ![Alt text](images/auth_success.png)
 
+## List of forked projects
+
+| Project | Branch | 
+| ------- | ------ |
+| [java-webauthn-server](https://github.com/sandbox-quantum/java-webauthn-server_fork) | add_Kyber768_Dilithium3_and_liboqs |
+| [liboqs-java](https://github.com/sandbox-quantum/liboqs-java_fork) | update_config_and_fix_error |
+| [authenticator-rs](https://github.com/sandbox-quantum/authenticator-rs_fork) | add_Kyber_and_Dilithium |
+| [solo2](https://github.com/sandbox-quantum/solo2_fork) | pqc_kyber768_dilithium3 |
+| [trussed](https://github.com/sandbox-quantum/trussed_fork) | pqc_kyber768_dilithium3 |
+| [fido-authenticator](https://github.com/sandbox-quantum/fido-authenticator_fork) | pqc_kyber768_dilithium3 |
+| [ctap-types](https://github.com/sandbox-quantum/ctap-types_fork) | pqc_kyber768_dilithium3 |
+| [cosey](https://github.com/sandbox-quantum/cosey_fork) | pqc_kyber768_dilithium3 |
+
+
+## License
+
+<sup>`PQC FIDO2` project is licensed under either [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.</sup>
+<br>
+<sub>Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.</sub>

@@ -7,7 +7,7 @@ FIDO2 involves three main entities:
 2. browser and
 3. server.
 
-We needed to change all these three entities. In our prototype, we use solo2 firmware for `authenticator`, Firefox browser and `java-webauthn-server` from Yubico.
+We needed to change all these three entities. In our prototype, we use Nitrokey 3 firmware for `authenticator`, Firefox browser and `java-webauthn-server` from Yubico.
 
 ## Setup
 
@@ -68,6 +68,18 @@ We tested with 118.0a1 Firefox nightly. The new versions of Firefox should also 
 
 ## Hardware Authenticator
 
+The [LPC55 Quickstart Guide](https://github.com/Nitrokey/nitrokey-3-firmware/blob/main/docs/lpc55-quickstart.md) explains how to compile and flash the firmware on a LPC55 Nitrokey 3 Hacker device or on a LPCXpresso55S69 development board.
+
+### Nitrokey 3 Hacker
+
+Once the device is reset and provisioned, the firmware can be flashed using the following command line:
+
+```console
+make -C utils/lpc55-builder flash FEATURES=develop
+```
+
+### LPCXpresso55S69
+
 Hardware setup:
 
 - [LPCXpresso55S69](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/lpcxpresso-boards/lpcxpresso55s69-development-board:LPC55S69-EVK) development board and 2 USB cables.
@@ -78,16 +90,16 @@ Before flashing hardware, make sure you can connect to the board using SEGGER J-
 
 ![SEGGER J-Link](images/jlink.png)
 
-In two terminals:
+Go to the `nitrokey-3-firmware/` directory and from 2 terminals:
 
-- Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
-- Terminal 2: Go to `solo2/` directory, run `make run-dev`
+- Terminal 1: `make -C utils/lpc55-builder/ jlink`
+- Terminal 2: `make -C utils/lpc55-builder/ run FEATURES=develop-no-press`
 
 To verify that the hardware authenticator is working, we use `fido2-token` tool from `libfido2`:
 
 ```
 ❯ fido2-token -L
-ioreg://4296480287: vendor=0x1209, product=0xbeee (SoloKeys Solo 2 (custom))
+ioreg://4295801683: vendor=0x20a0, product=0x42b2 (Nitrokey Nitrokey 3)
 ```
 
 ## Test
@@ -117,16 +129,17 @@ Output of the successful authentication.
 
 ## List of forked projects
 
-| Project | Branch | 
-| ------- | ------ |
-| [java-webauthn-server](https://github.com/sandbox-quantum/java-webauthn-server_fork) | add_Kyber768_Dilithium3_and_liboqs |
-| [liboqs-java](https://github.com/sandbox-quantum/liboqs-java_fork) | update_config_and_fix_error |
-| [authenticator-rs](https://github.com/sandbox-quantum/authenticator-rs_fork) | add_Kyber_and_Dilithium |
-| [solo2](https://github.com/sandbox-quantum/solo2_fork) | pqc_kyber768_dilithium3 |
-| [trussed](https://github.com/sandbox-quantum/trussed_fork) | pqc_kyber768_dilithium3 |
-| [fido-authenticator](https://github.com/sandbox-quantum/fido-authenticator_fork) | pqc_kyber768_dilithium3 |
-| [ctap-types](https://github.com/sandbox-quantum/ctap-types_fork) | pqc_kyber768_dilithium3 |
-| [cosey](https://github.com/sandbox-quantum/cosey_fork) | pqc_kyber768_dilithium3 |
+| Project | Branch | Required by |
+| ------- | ------ |---------|
+| [java-webauthn-server](https://github.com/sandbox-quantum/java-webauthn-server_fork) | `add_Kyber768_Dilithium3_and_liboqs` | |
+| [liboqs-java](https://github.com/sandbox-quantum/liboqs-java_fork) | `update_config_and_fix_error` | `java-webauthn-server` |
+| [authenticator-rs](https://github.com/sandbox-quantum/authenticator-rs_fork) | `add_Kyber_and_Dilithium` | Firefox |
+| [nitrokey-3-firmware](https://github.com/sandbox-quantum/nitrokey-3-firmware_fork) | `nitrokey-pqc-fido2` | Nitrokey 3 / LPCXpresso |
+| [trussed](https://github.com/sandbox-quantum/trussed_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
+| [fido-authenticator](https://github.com/sandbox-quantum/fido-authenticator_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
+| [ctap-types](https://github.com/sandbox-quantum/ctap-types_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware`|
+| [cosey](https://github.com/sandbox-quantum/cosey_fork) | `pqc_kyber768_dilithium3` | `fido-authenticator` |
+| [usbd-ctaphid](https://github.com/sandbox-quantum/usbd-ctaphid_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
 
 
 ## License

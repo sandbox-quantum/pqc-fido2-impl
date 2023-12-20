@@ -6,10 +6,6 @@
 	path = liboqs-java
 	url = git@github.com:sandbox-quantum/liboqs-java_fork.git
 	branch = update_config_and_fix_error
-[submodule "solo2"]
-	path = solo2
-	url = git@github.com:sandbox-quantum/solo2_fork.git
-	branch = pqc_kyber768_dilithium3
 [submodule "authenticator-rs"]
 	path = authenticator-rs
 	url = git@github.com:sandbox-quantum/authenticator-rs_fork.git

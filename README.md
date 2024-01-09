@@ -72,23 +72,35 @@ Hardware setup:
 
 - [LPCXpresso55S69](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/lpcxpresso-boards/lpcxpresso55s69-development-board:LPC55S69-EVK) development board and 2 USB cables.
 
-- Connect 2 USB cables to two ports: P9 High-Speed ("High Spd" label) and P6 Debug Probe ("Debug Link" label).
+- Connect a USB cable from the PC to the port P6 Debug Probe ("Debug Link" label) of the board
 
-Before flashing hardware, make sure you can connect to the board using SEGGER J-Link and install `JLinkGDBServer`.
+- Install the [SEGGER J-Link software bundle](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
+
+- Open the SEGGER J-Link Configuration program and make sure the J-Link protocol is being used.
+>  The board should appear in the list of devices connected via USB. We will be using the J-Link communication protocol. Therefore, in case the board appears as using the CMSIS-DAP protocol (the default in a new board), we will need to install the J-Link firmware by following [these steps](https://www.segger.com/products/debug-probes/j-link/models/other-j-links/lpc-link-2/). After restart, the board should show up in the configuration tool as a J-Link device. 
 
 ![SEGGER J-Link](images/jlink.png)
 
 In two terminals:
 
 - Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
-- Terminal 2: Go to `solo2/` directory, run `make run-dev`
+- Then, connect an additional USB cable from the PC to port P9 High-Speed ("High Spd" label). If you do that before running the JLinkGDBServer, the board may interfere with your mouse signal.
 
-To verify that the hardware authenticator is working, we use `fido2-token` tool from `libfido2`:
+- Terminal 2: Go to `solo2/` directory, run `make run-dev`. 
+> You may need to install a few dependences like `wget`, Xcode command line tools (in case of MACOS), `llvm` or `flip-link`. For the case of MACOS, do not install gcc for embedded devices using `brew install arm-none-eabi-xxx`, but run instead: `brew install --cask gcc-arm-embedded`.
+
+To verify that the board is working as a hardware authenticator, we use `fido2-token` tool from `libfido2`:
 
 ```
 ❯ fido2-token -L
 ioreg://4296480287: vendor=0x1209, product=0xbeee (SoloKeys Solo 2 (custom))
 ```
+
+### Troubleshooting
+
+* MACOS:  “fatal error: xxxx.h: No such file or directory” when building `solo2`: make sure `arm-none-eabi-xxx` is not installed and run instead `brew install --cask gcc-arm-embedded`. If needed, run `brew uninstall arm-none-eabi-xxx` and `brew autoremove` first [ref](https://github.com/raspberrypi/pico-feedback/issues/355).
+
+
 
 ## Test
 

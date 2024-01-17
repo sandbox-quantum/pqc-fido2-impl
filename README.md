@@ -98,7 +98,7 @@ Output of the successful registration.
 
 In our experiment, Dilithium3 ID is `-20`, you can see it in our [patched COSEY module](https://github.com/sandbox-quantum/cosey_fork/blob/pqc_kyber768_dilithium3/src/lib.rs#L76)
 
-The string `DIL3` or `Dilithium` should appear in the server logs.
+The string `DIL3`, `Dil` or `Dilithium` should appear in the server logs.
 
 
 2. For authentication click "Authenticate with passkey" or "Authenticate with username" to authenticate with the corresponding resident key.
@@ -107,13 +107,17 @@ Select "Proceed" and click the **USER** button on the board  / tap the Nitrokey 
 
 ![Alt text](images/auth.png)
 
-Output of the successful authentication. Again, the string `DIL3` or `Dilithium` should appear in the server logs.
+Output of the successful authentication. Again, the string `DIL3`, `Dil` or `Dilithium` should appear in the server logs.
 
 ![Alt text](images/auth_success.png)
 
 ### Troubleshooting
 
-* MACOS:  In case of errors related to `liboqs` in the server, make sure `OpenJDK@17` is used (or any other version supporting `aarc64`) and add a symlink for `liboqs.5.dylib`:  `ln -s /usr/local/lib/liboqs.5.dylib /opt/homebrew/Cellar/openjdk@17/17.0.9/libexec/openjdk.jdk/Contents/Home/lib/server/liboqs.5.dylib`
+* MACOS:  In case of errors related to `liboqs` in the server, make sure `OpenJDK@17` is used (or any other version supporting `aarc64`) and add a symlink for `liboqs.5.dylib`:  
+
+```console
+ln -s /usr/local/lib/liboqs.5.dylib /opt/homebrew/Cellar/openjdk@17/17.0.9/libexec/openjdk.jdk/Contents/Home/lib/server/liboqs.5.dylib
+```
 
 
 ## List of forked projects

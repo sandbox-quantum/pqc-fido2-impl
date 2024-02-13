@@ -1,0 +1,89 @@
+diff -r 3422b8cabbef Cargo.toml
+--- a/Cargo.toml	Tue Aug 01 07:07:08 2023 +0000
++++ b/Cargo.toml	Tue Jan 09 16:54:35 2024 +0100
+@@ -89,6 +89,8 @@
+ # code and will fail the build in unwanted cases.
+ cmake = { path = "build/rust/cmake" }
+ vcpkg = { path = "build/rust/vcpkg" }
++pqc_kyber = { git="https://github.com/Argyle-Software/kyber/", rev="476e22c1a1ed579f3030e1ae46077036dc384d7f" }
++nss-gk-api = { git="https://github.com/mozilla/nss-gk-api", rev="bec1dd413b499a33ace5e61d3eaf701150b9d6ff" }
+ 
+ # Helper crate for integration in the gecko build system.
+ mozbuild = { path = "build/rust/mozbuild" }
+diff -r 3422b8cabbef build/moz.configure/toolchain.configure
+--- a/build/moz.configure/toolchain.configure	Tue Aug 01 07:07:08 2023 +0000
++++ b/build/moz.configure/toolchain.configure	Tue Jan 09 16:54:35 2024 +0100
+@@ -1752,7 +1752,7 @@
+             die("Unsupported linker " + linker)
+ 
+         # Check the kind of linker
+-        version_check = ["-Wl,--version"]
++        version_check = ["-Wl,-v"]
+         cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
+ 
+         def try_linker(linker):
+@@ -1782,7 +1782,7 @@
+             if retcode == 1 and "Logging ld64 options" in stderr:
+                 kind = "ld64"
+ 
+-            elif retcode != 0:
++            elif retcode != 0 and False:
+                 return None
+ 
+             elif "mold" in stdout:
+diff -r 3422b8cabbef dom/webauthn/authrs_bridge/Cargo.toml
+--- a/dom/webauthn/authrs_bridge/Cargo.toml	Tue Aug 01 07:07:08 2023 +0000
++++ b/dom/webauthn/authrs_bridge/Cargo.toml	Tue Jan 09 16:54:35 2024 +0100
+@@ -5,7 +5,7 @@
+ authors = ["Martin Sirringhaus", "John Schanck"]
+ 
+ [dependencies]
+-authenticator = { version = "0.4.0-alpha.15", features = ["gecko"] }
++authenticator = { git = "https://github.com/sandbox-quantum/authenticator-rs_fork.git", rev = "70bf457918213d17afbbeb0c5570a495bf41b5f2", features = ["gecko"] }
+ log = "0.4"
+ moz_task = { path = "../../../xpcom/rust/moz_task" }
+ nserror = { path = "../../../xpcom/rust/nserror" }
+diff -r 3422b8cabbef dom/webauthn/authrs_bridge/src/lib.rs
+--- a/dom/webauthn/authrs_bridge/src/lib.rs	Tue Aug 01 07:07:08 2023 +0000
++++ b/dom/webauthn/authrs_bridge/src/lib.rs	Tue Jan 09 16:54:35 2024 +0100
+@@ -293,7 +293,7 @@
+ ) {
+     loop {
+         match status_rx.recv() {
+-            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
++            /*Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
+                 debug!("STATUS: device available: {}", dev_info)
+             }
+             Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
+@@ -301,16 +301,16 @@
+             }
+             Ok(StatusUpdate::Success { dev_info }) => {
+                 debug!("STATUS: success using device: {}", dev_info);
+-            }
++            }*/
+             Ok(StatusUpdate::SelectDeviceNotice) => {
+                 debug!("STATUS: Please select a device by touching one of them.");
+                 let notification_str =
+                     make_prompt("select-device", tid, origin, browsing_context_id);
+                 controller.send_prompt(tid, &notification_str);
+             }
+-            Ok(StatusUpdate::DeviceSelected(dev_info)) => {
++            /*Ok(StatusUpdate::DeviceSelected(dev_info)) => {
+                 debug!("STATUS: Continuing with device: {}", dev_info);
+-            }
++            }*/
+             Ok(StatusUpdate::PresenceRequired) => {
+                 debug!("STATUS: Waiting for user presence");
+                 let notification_str = make_prompt("presence", tid, origin, browsing_context_id);
+@@ -360,9 +360,9 @@
+             Ok(StatusUpdate::PinUvError(e)) => {
+                 warn!("Unexpected error: {:?}", e)
+             }
+-            Ok(StatusUpdate::InteractiveManagement((_, dev_info, auth_info))) => {
++            Ok(StatusUpdate::InteractiveManagement((dev_info, auth_info))) => {
+                 debug!(
+-                    "STATUS: interactive management: {}, {:?}",
++                    "STATUS: interactive management: {:?}, {:?}",
+                     dev_info, auth_info
+                 );
+             }

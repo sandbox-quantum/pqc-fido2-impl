@@ -6,11 +6,11 @@
 	path = liboqs-java
 	url = git@github.com:sandbox-quantum/liboqs-java_fork.git
 	branch = update_config_and_fix_error
-[submodule "solo2"]
-	path = solo2
-	url = git@github.com:sandbox-quantum/solo2_fork.git
-	branch = pqc_kyber768_dilithium3
 [submodule "authenticator-rs"]
 	path = authenticator-rs
 	url = git@github.com:sandbox-quantum/authenticator-rs_fork.git
 	branch = add_Kyber_and_Dilithium
+[submodule "nitrokey-3-firmware"]
+	path = nitrokey-3-firmware
+	url = git@github.com:sandbox-quantum/nitrokey-3-firmware_fork.git
+	branch = nitrokey-pqc-fido2

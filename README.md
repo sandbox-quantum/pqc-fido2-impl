@@ -7,7 +7,7 @@ FIDO2 involves three main entities:
 2. browser and
 3. server.
 
-We needed to change all these three entities. In our prototype, we use solo2 firmware for `authenticator`, Firefox browser and `java-webauthn-server` from Yubico.
+We needed to change all these three entities. In our prototype, we use Nitrokey 3 firmware for `authenticator`, Firefox browser and `java-webauthn-server` from Yubico.
 
 ## Setup
 
@@ -41,32 +41,22 @@ Go to `java-webauthn-server/`, run:
 
 ## Firefox browser with PQC authenticator
 
-You have to install [`Mercurial`](https://pypi.org/project/mercurial/) before building Firefox.
-
-Follow the [Bootstrap a copy of the Firefox source code](https://firefox-source-docs.mozilla.org/setup/linux_build.html#bootstrap-a-copy-of-the-firefox-source-code)
-
-```
-curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
-python3 bootstrap.py
-```
-
-Select `1. Firefox for Desktop Artifact Mode [default]` as our default build option.
-
-Patch `Cargo.toml` with our `authenticator-rs` module:
-
-- Open `mozilla-unified/Cargo.toml`.
-- Under `[patch.crates-io]`, add `authenticator = { path = "../authenticator-rs", version = "0.4.0-alpha.18", features = ["gecko"] }`.
-- Update Cargo: `cargo update -p authenticator`. Ingore the `bindgen` errors.
-
-Then, at `mozilla-unified/` run:
-```
-./mach build
-./mach run
-```
-We tested with 118.0a1 Firefox nightly. The new versions of Firefox should also work as long as modified `authenticator-rs` is used.
+Follow the instructions [here](docs/firefox.md) (make sure you have [`Mercurial`](https://pypi.org/project/mercurial/) installed first) to embed the modified PQC authenticator into Firefox.
 
 
 ## Hardware Authenticator
+
+The [LPC55 Quickstart Guide](https://github.com/Nitrokey/nitrokey-3-firmware/blob/main/docs/lpc55-quickstart.md) explains how to compile and flash the firmware on a LPC55 Nitrokey 3 Hacker device or on a LPCXpresso55S69 development board.
+
+### Nitrokey 3 Hacker
+
+Once the device is reset and provisioned following the [LPC55 Quickstart Guide](https://github.com/Nitrokey/nitrokey-3-firmware/blob/main/docs/lpc55-quickstart.md), the firmware can be flashed using the following command line:
+
+```console
+make -C utils/lpc55-builder flash FEATURES=develop
+```
+
+### LPCXpresso55S69
 
 Hardware setup:
 
@@ -74,21 +64,25 @@ Hardware setup:
 
 - Connect 2 USB cables to two ports: P9 High-Speed ("High Spd" label) and P6 Debug Probe ("Debug Link" label).
 
-Before flashing hardware, make sure you can connect to the board using SEGGER J-Link and install `JLinkGDBServer`.
+- Install the [SEGGER J-Link software bundle](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
+
+- Open the SEGGER J-Link Configuration program and make sure the J-Link protocol is being used
+>  The board should appear in the list of devices connected via USB. We will be using the J-Link communication protocol. Therefore, in case the board appears as using the CMSIS-DAP protocol (the default in a new board), we will need to install the J-Link firmware by following [these steps](https://www.segger.com/products/debug-probes/j-link/models/other-j-links/lpc-link-2/). After restart, the board should show up in the configuration tool as a J-Link device. 
 
 ![SEGGER J-Link](images/jlink.png)
 
-In two terminals:
+Go to the `nitrokey-3-firmware/` directory and from 2 terminals:
 
-- Terminal 1: `JLinkGDBServer -strict -device LPC55S69 -if SWD -vd`
-- Terminal 2: Go to `solo2/` directory, run `make run-dev`
+- Terminal 1: `make -C utils/lpc55-builder/ jlink`
+- Terminal 2: `make -C utils/lpc55-builder/ run FEATURES=develop-no-press`
 
-To verify that the hardware authenticator is working, we use `fido2-token` tool from `libfido2`:
+To verify that the board is working as a hardware authenticator, we use the `fido2-token` tool from `libfido2`:
 
 ```
 ❯ fido2-token -L
-ioreg://4296480287: vendor=0x1209, product=0xbeee (SoloKeys Solo 2 (custom))
+ioreg://4295801683: vendor=0x20a0, product=0x42b2 (Nitrokey Nitrokey 3)
 ```
+
 
 ## Test
 
@@ -96,7 +90,7 @@ ioreg://4296480287: vendor=0x1209, product=0xbeee (SoloKeys Solo 2 (custom))
 
 ![Alt text](images/create_account.png)
 
-Select "Proceed" and click the **USER** button on the board.
+Select "Proceed" and, if prompted for it, click the **USER** button on the board / tap the Nitrokey 3 Hacker board.
 
 Output of the successful registration.
 
@@ -104,29 +98,41 @@ Output of the successful registration.
 
 In our experiment, Dilithium3 ID is `-20`, you can see it in our [patched COSEY module](https://github.com/sandbox-quantum/cosey_fork/blob/pqc_kyber768_dilithium3/src/lib.rs#L76)
 
+The string `DIL3`, `Dil` or `Dilithium` should appear in the server logs.
 
-2. For authentication click "Authenticate with passkey" to authenticate with the resident key.
 
-Select "Proceed" and click the **USER** button on the board.
+2. For authentication click "Authenticate with passkey" or "Authenticate with username" to authenticate with the corresponding resident key.
+
+Select "Proceed" and click the **USER** button on the board  / tap the Nitrokey 3 Hacker board.
 
 ![Alt text](images/auth.png)
 
-Output of the successful authentication.
+Output of the successful authentication. Again, the string `DIL3`, `Dil` or `Dilithium` should appear in the server logs.
 
 ![Alt text](images/auth_success.png)
 
+### Troubleshooting
+
+* MACOS:  In case of errors related to `liboqs` in the server, make sure `OpenJDK@17` is used (or any other version supporting `aarc64`) and add a symlink for `liboqs.5.dylib`:  
+
+```console
+ln -s /usr/local/lib/liboqs.5.dylib /opt/homebrew/Cellar/openjdk@17/17.0.9/libexec/openjdk.jdk/Contents/Home/lib/server/liboqs.5.dylib
+```
+
+
 ## List of forked projects
 
-| Project | Branch | 
-| ------- | ------ |
-| [java-webauthn-server](https://github.com/sandbox-quantum/java-webauthn-server_fork) | add_Kyber768_Dilithium3_and_liboqs |
-| [liboqs-java](https://github.com/sandbox-quantum/liboqs-java_fork) | update_config_and_fix_error |
-| [authenticator-rs](https://github.com/sandbox-quantum/authenticator-rs_fork) | add_Kyber_and_Dilithium |
-| [solo2](https://github.com/sandbox-quantum/solo2_fork) | pqc_kyber768_dilithium3 |
-| [trussed](https://github.com/sandbox-quantum/trussed_fork) | pqc_kyber768_dilithium3 |
-| [fido-authenticator](https://github.com/sandbox-quantum/fido-authenticator_fork) | pqc_kyber768_dilithium3 |
-| [ctap-types](https://github.com/sandbox-quantum/ctap-types_fork) | pqc_kyber768_dilithium3 |
-| [cosey](https://github.com/sandbox-quantum/cosey_fork) | pqc_kyber768_dilithium3 |
+| Project | Branch | Required by |
+| ------- | ------ |---------|
+| [java-webauthn-server](https://github.com/sandbox-quantum/java-webauthn-server_fork) | `add_Kyber768_Dilithium3_and_liboqs` | |
+| [liboqs-java](https://github.com/sandbox-quantum/liboqs-java_fork) | `update_config_and_fix_error` | `java-webauthn-server` |
+| [authenticator-rs](https://github.com/sandbox-quantum/authenticator-rs_fork) | `add_Kyber_and_Dilithium` | Firefox |
+| [nitrokey-3-firmware](https://github.com/sandbox-quantum/nitrokey-3-firmware_fork) | `nitrokey-pqc-fido2` | Nitrokey 3 / LPCXpresso |
+| [trussed](https://github.com/sandbox-quantum/trussed_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
+| [fido-authenticator](https://github.com/sandbox-quantum/fido-authenticator_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
+| [ctap-types](https://github.com/sandbox-quantum/ctap-types_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware`|
+| [cosey](https://github.com/sandbox-quantum/cosey_fork) | `pqc_kyber768_dilithium3` | `fido-authenticator` |
+| [usbd-ctaphid](https://github.com/sandbox-quantum/usbd-ctaphid_fork) | `nitrokey-pqc-fido2` | `nitrokey-3-firmware` |
 
 
 ## License

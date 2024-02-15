@@ -119,6 +119,14 @@ Output of the successful authentication. Again, the string `DIL3`, `Dil` or `Dil
 ln -s /usr/local/lib/liboqs.5.dylib /opt/homebrew/Cellar/openjdk@17/17.0.9/libexec/openjdk.jdk/Contents/Home/lib/server/liboqs.5.dylib
 ```
 
+### Application logs
+You can enable RTT logs by running `make -C utils/lpc55-builder flash FEATURES=develop,log-rtt` / `make -C utils/lpc55-builder/ run FEATURES=develop-no-press,log-rtt` depending on whether you are using a Nitrokey 3 Hacker device or a LPCXpresso55S69 development board. Logs will appear in port 19021 (you can run `nc -nv 127.0.0.1 19021`).
+In order to additionally view application logs, you will need to add the `log-all` feature to the component for which you would like to view them. For example, for enabling application logs in the `fido-authenticator` component, we edit the `#apps` section of `nitrokey-3-firmware/components/apps/Cargo.toml` to add the `log-all` feature:
+`fido-authenticator = { version = "0.1.1", features = ["dispatch","log-all"], optional = true }` .
+
+
+> Troubleshooting: we had to remove another feature for this to work: in `nitrokey-3-firmware/components/apps/Cargo.toml`, `[features]` section, replace `-default = ["fido-authenticator", "ndef-app", "secrets-app", "opcard", "trussed/clients-4"]` with `default = ["fido-authenticator", "ndef-app", "secrets-app", "trussed/clients-4"]` .
+
 
 ## List of forked projects
 

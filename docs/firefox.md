@@ -6,18 +6,29 @@ Note that these instructions are specific to MacOS.
 ## 1. Clone Firefox
 
 ```console
-$ curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
-$ python3 bootstrap.py
+curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
+python3 bootstrap.py --vcs=git
 ```
 
-Select `2. Firefox for Desktop` as the build option. (Don't select `1. Firefox for Desktop Artifact Mode [default]`, otherwise changes to Rust code will be ignored.)
-
-Update to revision `752936` because breaking changes were introduced after that:
+When it asks if you want to "Clean up the bootstrap.py file", kill the script (Ctrl-C or Cmd-C). Then:
 
 ```console
+$ rm -r ~/.mozbuild
+$ rustup default 1.71.1
 $ cd mozilla-unified
-$ hg update 752936 --clean
+$ git checkout 3432a9b94331b1347eeae9439f30f33c7ac0870f
+$ ./mach --no-interactive bootstrap --application-choice browser
+$ git checkout 022bc03bb1dea0290379c9171243ea51ac244040
+$ ./mach --no-interactive bootstrap --application-choice browser
 ```
+
+What's happening here? Well, let me tell you:
+1. Delete any old Mozilla toolchains/builds to avoid conflicts.
+2. Downgrade to an older version of `rustup` since the newest one has an incompatibility with the old Firefox code.
+3. We have to checkout a version from Feb. 2024 that uses an older version of clang, because we can't build old code with the new version. The old code we want to actually build has a bug that doesn't allow it to be built, which is why we need a newer (but not newest) version to get clang set up properly. The selected commit is selected purely based on what was in the repository on the date that we last knew it to work; we don't know in exactly which commit the toolchain issues were introduced.
+4. We run the bootstrap so it gets the necessary version of clang and other toolchain stuff.
+5. We checkout the version from Aug. 2023 that we actually want. We have to use this version because breaking changes were introduced afterwards (potentially related to switching to something other than `authenticator-rs`, still need to look into this). Again, this is not the exact commit where breaking changes were introduced immediately afterwards, it's just a commit where we know things actually work.
+6. Re-run the bootstrap to make sure we're using a version of everything that's compatible with the selected code version.
 
 
 ## 2. Apply patch
